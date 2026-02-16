@@ -18,6 +18,16 @@ app.get("/", (req, res) => {
   res.send("Backend Wami OK 🚀");
 });
 
+// Debug route - test DB connection
+app.get("/debug/db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW() as time");
+    res.json({ ok: true, time: result.rows[0].time });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // GET servo status
 app.get("/servo/status", async (req, res) => {
   try {
@@ -28,7 +38,7 @@ app.get("/servo/status", async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error("GET /servo/status error:", err.message);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -39,7 +49,7 @@ app.post("/servo/start", async (req, res) => {
     res.json({ message: "Servo started", is_active: true });
   } catch (err) {
     console.error("POST /servo/start error:", err.message);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -50,7 +60,7 @@ app.post("/servo/stop", async (req, res) => {
     res.json({ message: "Servo stopped", is_active: false });
   } catch (err) {
     console.error("POST /servo/stop error:", err.message);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: err.message });
   }
 });
 
