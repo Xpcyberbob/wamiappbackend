@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
 const { z } = require("zod");
+const https = require("https");
 
 const app = express();
 app.use(cors());
@@ -116,6 +117,71 @@ app.get("/temperature/latest", async (req, res) => {
     console.error("GET /temperature/latest error:", err.message);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+
+// POST TTS proxy - Proxy Hugging Face Meta MMS TTS to avoid CORS
+app.post("/tts/speak", (req, res) => {
+  const { text, language } = req.body;
+  const hfKey = process.env.HF_API_KEY;
+
+  if (!hfKey) {
+    return res.status(500).json({ error: "HF_API_KEY not configured on backend" });
+  }
+  if (!text || !text.trim()) {
+    return res.status(400).json({ error: "Text is required" });
+  }
+
+  const models = {
+    fr: "facebook/mms-tts-fra",
+    en: "facebook/mms-tts-eng",
+    bci: "facebook/mms-tts-bci",
+    ar: "facebook/mms-tts-ara",
+    sw: "facebook/mms-tts-swh",
+    ha: "facebook/mms-tts-hau",
+    malinke: "facebook/mms-tts-fra",
+  };
+
+  const model = models[language] || models.fr;
+  const postData = JSON.stringify({ inputs: text });
+
+  const options = {
+    hostname: "api-inference.huggingface.co",
+    path: `/models/${model}`,
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${hfKey}`,
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(postData),
+    },
+  };
+
+  const hfReq = https.request(options, (hfRes) => {
+    // If model is loading (cold start), retry after delay
+    if (hfRes.statusCode === 503) {
+      res.status(503).json({ error: "Model loading, retry in 10s" });
+      return;
+    }
+    if (hfRes.statusCode !== 200) {
+      let body = "";
+      hfRes.on("data", (chunk) => (body += chunk));
+      hfRes.on("end", () => {
+        res.status(hfRes.statusCode).json({ error: body });
+      });
+      return;
+    }
+
+    // Stream audio back to client
+    res.setHeader("Content-Type", hfRes.headers["content-type"] || "audio/wav");
+    hfRes.pipe(res);
+  });
+
+  hfReq.on("error", (err) => {
+    console.error("TTS proxy error:", err.message);
+    res.status(500).json({ error: err.message });
+  });
+
+  hfReq.write(postData);
+  hfReq.end();
 });
 
 app.listen(process.env.PORT, "0.0.0.0", () => {
