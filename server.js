@@ -8,10 +8,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+// Support both DATABASE_URL and individual env vars
+let poolConfig;
+if (process.env.DB_HOST) {
+  poolConfig = {
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT || "6543"),
+    database: process.env.DB_NAME || "postgres",
+    user: process.env.DB_USER || "postgres",
+    password: process.env.DB_PASSWORD,
+    ssl: { rejectUnauthorized: false },
+  };
+} else {
+  poolConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+  };
+}
+const pool = new Pool(poolConfig);
 
 // Test route
 app.get("/", (req, res) => {
