@@ -17,6 +17,47 @@ app.get("/", (req, res) => {
   res.send("Backend Wami OK 🚀");
 });
 
+// Debug route - test DB + create tables if missing
+app.get("/debug/init", async (req, res) => {
+  try {
+    // Test connexion
+    const timeResult = await pool.query("SELECT NOW() as time");
+    
+    // Créer la table servo_state si elle n'existe pas
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS servo_state (
+        id SERIAL PRIMARY KEY,
+        is_active BOOLEAN DEFAULT FALSE,
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    
+    // Insérer la ligne par défaut si vide
+    const servoCheck = await pool.query("SELECT COUNT(*) FROM servo_state");
+    if (parseInt(servoCheck.rows[0].count) === 0) {
+      await pool.query("INSERT INTO servo_state (id, is_active) VALUES (1, FALSE)");
+    }
+    
+    // Créer la table temperatures si elle n'existe pas
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS temperatures (
+        id SERIAL PRIMARY KEY,
+        device_id TEXT NOT NULL,
+        temp_c NUMERIC NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    
+    res.json({ 
+      ok: true, 
+      time: timeResult.rows[0].time,
+      message: "Tables created/verified successfully"
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // GET servo status
 app.get("/servo/status", async (req, res) => {
   try {
