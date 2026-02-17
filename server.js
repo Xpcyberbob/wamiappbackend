@@ -17,44 +17,55 @@ app.get("/", (req, res) => {
   res.send("Backend Wami OK 🚀");
 });
 
-// Debug route - test DB + create tables if missing
+// Debug route - test DB connection and show env info
 app.get("/debug/init", async (req, res) => {
+  const dbUrl = process.env.DATABASE_URL;
+  const info = {
+    hasDbUrl: !!dbUrl,
+    dbUrlPrefix: dbUrl ? dbUrl.substring(0, 30) + "..." : "NOT SET",
+    port: process.env.PORT,
+    nodeEnv: process.env.NODE_ENV,
+  };
+
   try {
-    // Test connexion
     const timeResult = await pool.query("SELECT NOW() as time");
     
-    // Créer la table servo_state si elle n'existe pas
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS servo_state (
-        id SERIAL PRIMARY KEY,
-        is_active BOOLEAN DEFAULT FALSE,
-        updated_at TIMESTAMP DEFAULT NOW()
-      )
-    `);
-    
-    // Insérer la ligne par défaut si vide
-    const servoCheck = await pool.query("SELECT COUNT(*) FROM servo_state");
-    if (parseInt(servoCheck.rows[0].count) === 0) {
-      await pool.query("INSERT INTO servo_state (id, is_active) VALUES (1, FALSE)");
+    // Vérifier si servo_state existe et a des données
+    let servoInfo = "unknown";
+    try {
+      const servoCheck = await pool.query("SELECT COUNT(*) as cnt FROM servo_state");
+      servoInfo = "exists, rows=" + servoCheck.rows[0].cnt;
+      if (parseInt(servoCheck.rows[0].cnt) === 0) {
+        await pool.query("INSERT INTO servo_state (id, is_active) VALUES (1, FALSE)");
+        servoInfo += " -> inserted default row";
+      }
+    } catch (e) {
+      servoInfo = "error: " + e.message;
     }
-    
-    // Créer la table temperatures si elle n'existe pas
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS temperatures (
-        id SERIAL PRIMARY KEY,
-        device_id TEXT NOT NULL,
-        temp_c NUMERIC NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-      )
-    `);
-    
+
+    // Vérifier temperatures
+    let tempInfo = "unknown";
+    try {
+      const tempCheck = await pool.query("SELECT COUNT(*) as cnt FROM temperatures");
+      tempInfo = "exists, rows=" + tempCheck.rows[0].cnt;
+    } catch (e) {
+      tempInfo = "error: " + e.message;
+    }
+
     res.json({ 
       ok: true, 
       time: timeResult.rows[0].time,
-      message: "Tables created/verified successfully"
+      env: info,
+      servo_state: servoInfo,
+      temperatures: tempInfo,
     });
   } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message,
+      stack: err.stack,
+      env: info,
+    });
   }
 });
 
