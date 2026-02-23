@@ -321,7 +321,7 @@ async function generateMmsAudio(text, languageCode) {
   const hfKey = process.env.HF_API_KEY;
 
   const response = await fetch(
-    `https://api-inference.huggingface.co/models/${model}`,
+    `https://router.huggingface.co/hf-inference/models/${model}`,
     {
       method: "POST",
       headers: {
