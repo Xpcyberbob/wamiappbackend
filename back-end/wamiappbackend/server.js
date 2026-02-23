@@ -166,7 +166,76 @@ app.get("/temperature/latest", async (req, res) => {
 });
 
 // ============================================================
-// 🎤 TTS - Edge TTS (Microsoft) - Voix réalistes et naturelles
+// � TRADUCTION - Google Translate (gratuit, pas de clé API)
+// ============================================================
+
+// Langues supportées pour la traduction via Google Translate
+const TRANSLATE_LANGUAGES = {
+  fr: "fr",
+  en: "en",
+  bci: "bci",   // Baoulé (ajouté par Google en 2024)
+  ar: "ar",
+  sw: "sw",
+  ha: "ha",
+  malinke: "fr", // Pas supporté → fallback français
+};
+
+// POST /translate - Traduire du texte
+app.post("/translate", async (req, res) => {
+  const { text, from, to } = req.body;
+
+  if (!text || !to) {
+    return res.status(400).json({ error: "text and to are required" });
+  }
+
+  const sourceLang = TRANSLATE_LANGUAGES[from] || "fr";
+  const targetLang = TRANSLATE_LANGUAGES[to] || "fr";
+
+  // Si source == target, pas besoin de traduire
+  if (sourceLang === targetLang) {
+    return res.json({ translatedText: text, from: sourceLang, to: targetLang });
+  }
+
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Google Translate HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Extraire le texte traduit depuis la réponse Google
+    let translatedText = "";
+    if (data && data[0]) {
+      for (const segment of data[0]) {
+        if (segment[0]) {
+          translatedText += segment[0];
+        }
+      }
+    }
+
+    if (!translatedText) {
+      throw new Error("Empty translation result");
+    }
+
+    console.log(`🌍 Traduction [${sourceLang}→${targetLang}]: "${text.substring(0, 40)}..." → "${translatedText.substring(0, 40)}..."`);
+    res.json({ translatedText, from: sourceLang, to: targetLang });
+  } catch (error) {
+    console.error("❌ Translation Error:", error.message);
+    // En cas d'erreur, renvoyer le texte original
+    res.json({ translatedText: text, from: sourceLang, to: targetLang, fallback: true });
+  }
+});
+
+// GET /translate/languages - Liste les langues supportées
+app.get("/translate/languages", (req, res) => {
+  res.json(TRANSLATE_LANGUAGES);
+});
+
+// ============================================================
+// �🎤 TTS - Edge TTS (Microsoft) - Voix réalistes et naturelles
 // ============================================================
 
 // Mapping des langues vers les voix Microsoft Edge
