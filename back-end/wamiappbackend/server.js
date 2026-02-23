@@ -240,10 +240,10 @@ app.get("/translate/languages", (req, res) => {
 
 // Mapping des langues vers les voix Microsoft Edge
 const EDGE_TTS_VOICES = {
-  fr: { voice: "fr-FR-DeniseNeural", lang: "fr-FR" },
-  en: { voice: "en-US-JennyNeural", lang: "en-US" },
-  ar: { voice: "ar-SA-ZariyahNeural", lang: "ar-SA" },
-  sw: { voice: "sw-KE-ZuriNeural", lang: "sw-KE" },
+  fr: { voice: "fr-FR-HenriNeural", lang: "fr-FR" },
+  en: { voice: "en-US-GuyNeural", lang: "en-US" },
+  ar: { voice: "ar-SA-HamedNeural", lang: "ar-SA" },
+  sw: { voice: "sw-KE-RafikiNeural", lang: "sw-KE" },
   ha: null,      // Pas de voix Edge pour Hausa → fallback MMS
   bci: null,     // Pas de voix Edge pour Baoulé → fallback MMS
   malinke: null, // Pas de voix Edge pour Malinké → fallback MMS
