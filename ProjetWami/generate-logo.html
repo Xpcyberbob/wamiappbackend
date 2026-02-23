@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Wami Logo Generator</title>
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  body { background: #0f172a; display: flex; flex-direction: column; align-items: center; padding: 30px; font-family: 'Segoe UI', sans-serif; color: white; gap: 20px; }
+  h1 { font-size: 22px; opacity: 0.8; }
+  .row { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+  .card { text-align: center; }
+  .card p { margin: 6px 0; font-size: 13px; opacity: 0.5; }
+  canvas { border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); max-width: 300px; height: auto; }
+  #splashCanvas { max-width: 150px; }
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  button { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, #0891b2, #06b6d4); color: white; }
+  button:hover { opacity: 0.9; }
+  .info { font-size: 13px; opacity: 0.5; max-width: 600px; text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1>Wami Pisciculture — Logo Generator</h1>
+<p class="info">Clic droit sur chaque image → "Enregistrer l'image sous" pour sauvegarder,<br>ou utilisez les boutons ci-dessous.</p>
+
+<div class="row">
+  <div class="card">
+    <canvas id="iconCanvas" width="1024" height="1024"></canvas>
+    <p>icon.png (1024×1024)</p>
+  </div>
+  <div class="card">
+    <canvas id="adaptiveCanvas" width="1024" height="1024"></canvas>
+    <p>adaptive-icon.png (1024×1024)</p>
+  </div>
+  <div class="card">
+    <canvas id="splashCanvas" width="1284" height="2778"></canvas>
+    <p>splash.png (1284×2778)</p>
+  </div>
+</div>
+
+<div class="btns">
+  <button onclick="dl('iconCanvas','icon.png')">⬇ Icon</button>
+  <button onclick="dl('adaptiveCanvas','adaptive-icon.png')">⬇ Adaptive Icon</button>
+  <button onclick="dl('splashCanvas','splash.png')">⬇ Splash</button>
+</div>
+
+<script>
+function dl(id, name) {
+  const c = document.getElementById(id);
+  const a = document.createElement('a');
+  a.download = name;
+  a.href = c.toDataURL('image/png');
+  a.click();
+}
+
+// ============ DRAWING FUNCTIONS ============
+
+function drawWaterWaves(ctx, cx, cy, radius, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  for (let i = 0; i < 3; i++) {
+    const r = radius + i * 18;
+    const startAngle = Math.PI * 0.15;
+    const endAngle = Math.PI * 0.85;
+    ctx.beginPath();
+    ctx.arc(cx, cy + 10, r, startAngle, endAngle);
+    ctx.strokeStyle = '#67e8f9';
+    ctx.lineWidth = 4 - i;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawModernFish(ctx, cx, cy, size) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  const s = size / 200;
+  ctx.scale(s, s);
+
+  // Tail fin
+  ctx.beginPath();
+  ctx.moveTo(-130, 0);
+  ctx.lineTo(-190, -60);
+  ctx.quadraticCurveTo(-160, 0, -190, 60);
+  ctx.closePath();
+  const tailGrad = ctx.createLinearGradient(-190, -60, -130, 60);
+  tailGrad.addColorStop(0, '#22d3ee');
+  tailGrad.addColorStop(1, '#0891b2');
+  ctx.fillStyle = tailGrad;
+  ctx.fill();
+
+  // Main body
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 140, 80, 0, 0, Math.PI * 2);
+  const bodyGrad = ctx.createLinearGradient(-140, -80, 140, 80);
+  bodyGrad.addColorStop(0, '#06b6d4');
+  bodyGrad.addColorStop(0.4, '#0891b2');
+  bodyGrad.addColorStop(1, '#0e7490');
+  ctx.fillStyle = bodyGrad;
+  ctx.fill();
+
+  // Body highlight
+  ctx.beginPath();
+  ctx.ellipse(10, -20, 100, 35, -0.1, 0, Math.PI * 2);
+  const hlGrad = ctx.createRadialGradient(10, -20, 5, 10, -20, 80);
+  hlGrad.addColorStop(0, 'rgba(255,255,255,0.35)');
+  hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = hlGrad;
+  ctx.fill();
+
+  // Dorsal fin
+  ctx.beginPath();
+  ctx.moveTo(-20, -75);
+  ctx.quadraticCurveTo(20, -140, 70, -78);
+  const dorsalGrad = ctx.createLinearGradient(-20, -140, 70, -75);
+  dorsalGrad.addColorStop(0, '#22d3ee');
+  dorsalGrad.addColorStop(1, '#0891b2');
+  ctx.fillStyle = dorsalGrad;
+  ctx.fill();
+
+  // Bottom fin
+  ctx.beginPath();
+  ctx.moveTo(10, 75);
+  ctx.quadraticCurveTo(30, 120, 60, 78);
+  ctx.fillStyle = '#0e7490';
+  ctx.fill();
+
+  // Eye - outer
+  ctx.beginPath();
+  ctx.arc(70, -10, 22, 0, Math.PI * 2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+
+  // Eye - iris
+  ctx.beginPath();
+  ctx.arc(74, -10, 13, 0, Math.PI * 2);
+  ctx.fillStyle = '#0c4a6e';
+  ctx.fill();
+
+  // Eye - pupil
+  ctx.beginPath();
+  ctx.arc(76, -12, 6, 0, Math.PI * 2);
+  ctx.fillStyle = '#020617';
+  ctx.fill();
+
+  // Eye - shine
+  ctx.beginPath();
+  ctx.arc(78, -16, 4, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fill();
+
+  // Gill lines
+  ctx.beginPath();
+  ctx.arc(40, 0, 40, -0.8, 0.8);
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Scale pattern (subtle)
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 4; col++) {
+      const sx = -80 + col * 35;
+      const sy = -15 + row * 28;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 12, 0.3, Math.PI - 0.3);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // Mouth
+  ctx.beginPath();
+  ctx.moveTo(130, 2);
+  ctx.quadraticCurveTo(120, 10, 110, 8);
+  ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawBubbles(ctx, cx, cy, count, maxR, spread) {
+  ctx.save();
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+    const dist = spread * 0.5 + Math.random() * spread * 0.5;
+    const bx = cx + Math.cos(angle) * dist;
+    const by = cy + Math.sin(angle) * dist;
+    const r = 3 + Math.random() * maxR;
+
+    ctx.beginPath();
+    ctx.arc(bx, by, r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(103, 232, 249, ${0.1 + Math.random() * 0.2})`;
+    ctx.fill();
+
+    // Bubble highlight
+    ctx.beginPath();
+    ctx.arc(bx - r * 0.3, by - r * 0.3, r * 0.3, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${0.2 + Math.random() * 0.3})`;
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawText(ctx, cx, y, text, fontSize, color) {
+  ctx.save();
+  ctx.font = `800 ${fontSize}px 'Segoe UI', Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = color;
+  ctx.letterSpacing = '4px';
+  ctx.fillText(text, cx, y);
+  ctx.restore();
+}
+
+function drawSubText(ctx, cx, y, text, fontSize, color) {
+  ctx.save();
+  ctx.font = `400 ${fontSize}px 'Segoe UI', Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = color;
+  ctx.letterSpacing = '6px';
+  ctx.fillText(text, cx, y);
+  ctx.restore();
+}
+
+// ============ ICON (1024x1024) ============
+function drawIcon() {
+  const c = document.getElementById('iconCanvas');
+  const ctx = c.getContext('2d');
+  const w = 1024, h = 1024;
+
+  // Background gradient
+  const bg = ctx.createRadialGradient(w/2, h/2, 100, w/2, h/2, 600);
+  bg.addColorStop(0, '#164e63');
+  bg.addColorStop(0.6, '#0e3a4a');
+  bg.addColorStop(1, '#082f49');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+
+  // Subtle circular glow
+  const glow = ctx.createRadialGradient(w/2, h/2 - 40, 50, w/2, h/2, 400);
+  glow.addColorStop(0, 'rgba(6, 182, 212, 0.15)');
+  glow.addColorStop(1, 'rgba(6, 182, 212, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, w, h);
+
+  // Water waves at bottom
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    const waveY = 720 + i * 40;
+    ctx.moveTo(0, waveY);
+    for (let x = 0; x <= w; x += 10) {
+      ctx.lineTo(x, waveY + Math.sin(x * 0.015 + i * 1.2) * 20);
+    }
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(8, 145, 178, ${0.08 + i * 0.04})`;
+    ctx.fill();
+  }
+
+  // Bubbles
+  drawBubbles(ctx, w/2, h/2, 20, 12, 350);
+
+  // Fish
+  drawModernFish(ctx, w/2, h/2 - 50, 380);
+
+  // Text "WAMI"
+  drawText(ctx, w/2, h - 160, 'WAMI', 120, 'rgba(255,255,255,0.95)');
+
+  // Subtle line under text
+  ctx.beginPath();
+  ctx.moveTo(w/2 - 150, h - 105);
+  ctx.lineTo(w/2 + 150, h - 105);
+  const lineGrad = ctx.createLinearGradient(w/2 - 150, 0, w/2 + 150, 0);
+  lineGrad.addColorStop(0, 'rgba(34, 211, 238, 0)');
+  lineGrad.addColorStop(0.5, 'rgba(34, 211, 238, 0.6)');
+  lineGrad.addColorStop(1, 'rgba(34, 211, 238, 0)');
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+// ============ ADAPTIVE ICON (1024x1024, no bg for Android masking) ============
+function drawAdaptive() {
+  const c = document.getElementById('adaptiveCanvas');
+  const ctx = c.getContext('2d');
+  const w = 1024, h = 1024;
+
+  // Solid teal background (Android will mask this)
+  ctx.fillStyle = '#0891b2';
+  ctx.fillRect(0, 0, w, h);
+
+  // Lighter center
+  const bg = ctx.createRadialGradient(w/2, h/2, 50, w/2, h/2, 500);
+  bg.addColorStop(0, '#0e7490');
+  bg.addColorStop(1, '#0891b2');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+
+  // Fish centered (slightly smaller for safe zone)
+  drawModernFish(ctx, w/2, h/2 - 30, 320);
+
+  // Text
+  drawText(ctx, w/2, h/2 + 220, 'WAMI', 100, 'rgba(255,255,255,0.9)');
+}
+
+// ============ SPLASH (1284x2778) ============
+function drawSplash() {
+  const c = document.getElementById('splashCanvas');
+  const ctx = c.getContext('2d');
+  const w = 1284, h = 2778;
+
+  // Background
+  const bg = ctx.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#082f49');
+  bg.addColorStop(0.4, '#0e3a4a');
+  bg.addColorStop(0.7, '#164e63');
+  bg.addColorStop(1, '#0891b2');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+
+  // Glow
+  const glow = ctx.createRadialGradient(w/2, h * 0.38, 100, w/2, h * 0.38, 500);
+  glow.addColorStop(0, 'rgba(6, 182, 212, 0.2)');
+  glow.addColorStop(1, 'rgba(6, 182, 212, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, w, h);
+
+  // Water waves at bottom
+  for (let i = 0; i < 6; i++) {
+    ctx.beginPath();
+    const waveY = h - 400 + i * 60;
+    ctx.moveTo(0, waveY);
+    for (let x = 0; x <= w; x += 10) {
+      ctx.lineTo(x, waveY + Math.sin(x * 0.01 + i * 1.5) * 30);
+    }
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(8, 145, 178, ${0.05 + i * 0.03})`;
+    ctx.fill();
+  }
+
+  // Bubbles
+  drawBubbles(ctx, w/2, h * 0.38, 30, 15, 400);
+
+  // Fish
+  drawModernFish(ctx, w/2, h * 0.35, 450);
+
+  // Title
+  drawText(ctx, w/2, h * 0.52, 'WAMI', 160, 'rgba(255,255,255,0.95)');
+
+  // Subtitle
+  drawSubText(ctx, w/2, h * 0.57, 'PISCICULTURE', 50, 'rgba(34, 211, 238, 0.8)');
+
+  // Decorative line
+  ctx.beginPath();
+  ctx.moveTo(w/2 - 200, h * 0.60);
+  ctx.lineTo(w/2 + 200, h * 0.60);
+  const lineGrad = ctx.createLinearGradient(w/2 - 200, 0, w/2 + 200, 0);
+  lineGrad.addColorStop(0, 'rgba(34, 211, 238, 0)');
+  lineGrad.addColorStop(0.5, 'rgba(34, 211, 238, 0.5)');
+  lineGrad.addColorStop(1, 'rgba(34, 211, 238, 0)');
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Tagline
+  drawSubText(ctx, w/2, h * 0.63, 'Aquaculture Intelligente', 36, 'rgba(255,255,255,0.4)');
+}
+
+// ============ RENDER ALL ============
+drawIcon();
+drawAdaptive();
+drawSplash();
+</script>
+</body>
+</html>
